@@ -41,4 +41,4 @@ vcftools --vcf noindel.recode.vcf --TsTv-summary --out tstv_mq
 vcftools --vcf noindel.recode.vcf   --minQ $vq  --recode  --recode-INFO-all  --out varqual
 vcftools --vcf varqual.recode.vcf --TsTv-summary --out tstv_var
 vcftools --vcf varqual.recode.vcf --exclude-positions-overlap $refname --recode --recode-INFO-all --out unique
-vcftools --vcf unique.recode.vcf --TsTv-summary --out tstv_uni
+vcftools --vcf unique.recode.vcf --TsTv-summary --out tstv_uni 
