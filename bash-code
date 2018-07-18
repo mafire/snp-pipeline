@@ -1,0 +1,44 @@
+#!/bin/bash 
+
+pathsamname= ?(name of directory where files are stored)?
+samname= ?(name of starting SAM file)?
+genomename= ?(name of reference genome file the SAM was aligned to)?
+refname= ?(name of SNP reference file)?
+bq=?(minimum base quality to be filtered)?
+mq=?(minimum map quality to be filtered)?
+vq=?(minimum variant quality to be filtered)?
+dq=?(minimum depth to be filtered)?
+
+
+
+module load gcc/4.9.2
+module load samtools
+module load bcftools
+module load vcftools
+
+
+
+samtools view -b -S -o sam_to_bam.bam $samname
+
+if [[ $mq -ne 0 ]]
+then
+samtools view -h -q $mq sam_to_bam.bam > sam_to_bam.bam
+fi
+
+samtools sort -o sort.bam sam_to_bam.bam
+samtools index sort.bam
+samtools mpileup -g -f $genomename --min-BQ $bq sort.bam > mpileup_bcf.bcf 
+
+
+bcftools call -c -v mpileup_bcf.bcf > called_bcf.vcf 
+if [[ $dp -ne 0 ]]
+then
+	bcftools filter --include 'MIN(DP)'> $dp called_bcf.vcf > called_bcf.vcf
+fi
+
+vcftools --vcf called_bcf.vcf --remove-indels --recode --recode-INFO-all --out noindel
+vcftools --vcf noindel.recode.vcf --TsTv-summary --out tstv_mq
+vcftools --vcf noindel.recode.vcf   --minQ $vq  --recode  --recode-INFO-all  --out varqual
+vcftools --vcf varqual.recode.vcf --TsTv-summary --out tstv_var
+vcftools --vcf varqual.recode.vcf --exclude-positions-overlap $refname --recode --recode-INFO-all --out unique
+vcftools --vcf unique.recode.vcf --TsTv-summary --out tstv_uni
